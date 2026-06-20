@@ -81,7 +81,7 @@ const $ = id => document.getElementById(id);
 // アプリ本体（localhost:5178）以外で開いたら警告
 if (!(/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.port === '5178')) {
   document.querySelector('.wrap').insertAdjacentHTML('afterbegin',
-    '<div class="err" style="margin-bottom:16px;line-height:1.6;">⚠️ これはプレビュー表示で、アプリ本体ではありません（読み取りは動きません）。<br><b>「ReVal自動読み取りを起動.bat」をダブルクリック</b>し、ブラウザのアドレスが <b>localhost:5178</b> の画面で使ってください。</div>');
+    '<div class="err" style="margin-bottom:16px;line-height:1.6;">⚠️ これはプレビュー表示で、アプリ本体ではありません（読み取りは動きません）。<br><b>「ReVal自動読み取りを起動」</b>（Windowsは .bat ／ Macは .command）を実行し、ブラウザのアドレスが <b>localhost:5178</b> の画面で使ってください。</div>');
 }
 
 const drop = $('drop'), fileInput = $('file');
