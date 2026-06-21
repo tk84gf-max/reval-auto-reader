@@ -69,6 +69,24 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // 物件ページURLから読み取り（公開ページ用。楽待/健美家などログイン必須は読めない）
+  if (req.method === 'POST' && url === '/extract-url') {
+    const apiKey = core.getApiKey();
+    if (!apiKey) return sendJson(res, 200, { ok: false, error: 'APIキーが見つかりません（' + core.KEY_FILE + '）' });
+    readBody(req, raw => {
+      let body;
+      try { body = JSON.parse(raw); } catch (e) { return sendJson(res, 200, { ok: false, error: 'リクエストが壊れています' }); }
+      if (!body.url) return sendJson(res, 200, { ok: false, error: 'URLが空です' });
+      core.extractFromUrl(apiKey, body.url)
+        .then(fields => {
+          if (!(Number(fields.price) > 0)) return sendJson(res, 200, { ok: false, error: 'このページから物件情報を読み取れませんでした（ログイン必須サイト＝楽待/健美家等、またはJSで描画されるページの可能性）。マイソクのドロップ／スクショ貼り付けをお試しください。' });
+          sendJson(res, 200, { ok: true, fields });
+        })
+        .catch(err => sendJson(res, 200, { ok: false, error: 'URL読み取り失敗: ' + err.message }));
+    });
+    return;
+  }
+
   // 詳細資料（レントロール・コスト表など複数）から実数を抽出
   if (req.method === 'POST' && url === '/extract-detail') {
     const apiKey = core.getApiKey();

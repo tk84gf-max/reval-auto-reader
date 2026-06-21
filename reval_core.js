@@ -12,7 +12,7 @@ const http = require('http');
 const https = require('https');
 const { execFile } = require('child_process');
 
-// 配布版：このアプリフォルダ内で自己完結（個人プロジェクト構造に依存しない）
+// 配布版＝自己完結（このフォルダ内で完結。dev版の相対パスにしない）
 const PROJECT_ROOT = __dirname;
 const SCRIPTS = path.join(__dirname, 'scripts');
 const ANALYSIS_DIR = path.join(__dirname, 'analysis');
@@ -111,6 +111,13 @@ async function extractFromText(apiKey, bodyText) {
   const prompt = EXTRACT_PROMPT.replace('__TODAY__', todayStr()) + '\n\n--- 資料（メール本文）---\n' + String(bodyText).slice(0, 8000);
   const text = await callAnthropic(apiKey, [{ type: 'text', text: prompt }]);
   return normalizeFields(parseJsonLoose(text));
+}
+
+// 物件ページURLから抽出（公開ページ用。ログイン必須サイトは本文が取れず失敗する）
+async function extractFromUrl(apiKey, url) {
+  const pageText = await fetchUrlText(url);   // ページ取得→本文化→12000字に切る（生ダンプしない）
+  if (!pageText || pageText.replace(/\s/g, '').length < 80) throw new Error('ページ本文が取得できませんでした（ログイン必須・取得拒否・空ページの可能性）');
+  return extractFromText(apiKey, pageText);
 }
 
 function normalizeFields(f) {
@@ -254,7 +261,7 @@ function captainFilter(result) {
 
 module.exports = {
   PROJECT_ROOT, SCRIPTS, ANALYSIS_DIR, KEY_FILE, MODEL,
-  getApiKey, todayStr, extractFromFile, extractFromText, extractDetail,
+  getApiKey, todayStr, extractFromFile, extractFromText, extractFromUrl, extractDetail,
   buildInput, runCalc, runPrefill, captainFilter,
   fetchUrlText, htmlToText
 };

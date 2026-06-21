@@ -64,6 +64,11 @@
       <div class="note">クリックで選択 ／ 画像をコピーして <b>Ctrl+V</b>（PDF / JPG / PNG）。入れるたびに下へカードが増えます。</div>
     </div>
     <input type="file" id="file" class="hidden" accept="application/pdf,image/png,image/jpeg" multiple>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+      <input id="urlInput" type="text" placeholder="物件ページのURLを貼り付け（公開ページ用。楽待/健美家はログイン必須で不可）" style="flex:1;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;">
+      <button id="urlBtn" class="btn">URLから読み取る</button>
+    </div>
+    <div id="urlMsg" class="note" style="margin-top:6px;"></div>
   </div>
 
   <!-- ランキング -->
@@ -81,7 +86,7 @@ const $ = id => document.getElementById(id);
 // アプリ本体（localhost:5178）以外で開いたら警告
 if (!(/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.port === '5178')) {
   document.querySelector('.wrap').insertAdjacentHTML('afterbegin',
-    '<div class="err" style="margin-bottom:16px;line-height:1.6;">⚠️ これはプレビュー表示で、アプリ本体ではありません（読み取りは動きません）。<br><b>「ReVal自動読み取りを起動」</b>（Windowsは .bat ／ Macは .command）を実行し、ブラウザのアドレスが <b>localhost:5178</b> の画面で使ってください。</div>');
+    '<div class="err" style="margin-bottom:16px;line-height:1.6;">⚠️ これはプレビュー表示で、アプリ本体ではありません（読み取りは動きません）。<br>Windowsは <b>「ReVal自動読み取りを起動.bat」</b>／Macは <b>「ReVal自動読み取りを起動.command」</b> をダブルクリックし、ブラウザのアドレスが <b>localhost:5178</b> の画面で使ってください。</div>');
 }
 
 const drop = $('drop'), fileInput = $('file');
@@ -117,6 +122,26 @@ async function addCardFromFile(f){
     const r = await fetch('/extract', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ mediaType:f.type, data:b64 }) }).then(x=>x.json());
     if (!r.ok) return c.fail(r.error || '読み取りに失敗');
     c.init(r.fields, f.name);
+  } catch(e){ c.fail('通信エラー: ' + e.message); }
+}
+
+// ---- URLから読み取り（公開ページ用。ログイン必須サイトは不可）----
+$('urlBtn').addEventListener('click', goUrl);
+$('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') goUrl(); });
+function goUrl(){
+  const u = $('urlInput').value.trim();
+  if (!/^https?:\/\//i.test(u)) { $('urlMsg').textContent = '⚠️ http:// または https:// で始まるURLを入れてください'; return; }
+  $('urlMsg').textContent = '';
+  addCardFromUrl(u);
+  $('urlInput').value = '';
+}
+async function addCardFromUrl(u){
+  const c = buildCard();
+  c.status('URLを読み取り中…（' + u.slice(0, 60) + '）');
+  try {
+    const r = await fetch('/extract-url', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ url: u }) }).then(x=>x.json());
+    if (!r.ok) return c.fail(r.error || 'URLから読み取れませんでした');
+    c.init(r.fields, r.fields.name || u);
   } catch(e){ c.fail('通信エラー: ' + e.message); }
 }
 
