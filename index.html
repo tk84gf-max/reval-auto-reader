@@ -181,7 +181,7 @@ function buildCard(){
       '<div class="pc-revalwrap hidden" style="margin-top:14px;">'+
         '<div style="font-weight:600;font-size:13px;margin-bottom:4px;">📊 ReVal（想定/満室実数/現況実数の3列比較＋シミュレーション）</div>'+
         '<iframe class="pc-reval"></iframe>'+
-        '<div style="margin-top:6px;"><button class="btn ghost pc-opentab">↗ 別タブで大きく開く</button></div>'+
+        '<div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn pc-refresh">🔄 分析を更新（手入力を反映）</button><button class="btn ghost pc-opentab">↗ 別タブで大きく開く</button></div>'+
       '</div>'+
     '</div>';
   $('cards').prepend(el);
@@ -191,6 +191,7 @@ function buildCard(){
   q('.pc-head').addEventListener('click', e => { if (e.target.closest('.pc-x')) return; el.classList.toggle('collapsed'); q('.pc-tog').textContent = el.classList.contains('collapsed') ? '▸' : '▾'; });
   q('.pc-x').addEventListener('click', () => { const i = cards.indexOf(api); if (i>=0) cards.splice(i,1); el.remove(); renderRanking(); });
   q('.pc-opentab').addEventListener('click', () => { if (lastHtmlUrl) window.open(lastHtmlUrl, '_blank'); });
+  q('.pc-refresh').addEventListener('click', () => doCalc(true));
 
   function getFields(){ const o={}; el.querySelectorAll('.pc-fields [data-k]').forEach(inp=>{ const k=inp.dataset.k; o[k] = (inp.tagName==='SELECT') ? inp.value : (['name','address'].includes(k)? inp.value : numv(inp.value)); }); return o; }
 
@@ -206,7 +207,10 @@ function buildCard(){
       q('.pc-carte').textContent = j.carte || ''; q('.pc-carte').classList.remove('hidden');
       q('.pc-title').textContent = fl.name || '物件';
       q('.pc-badge').innerHTML = badgeHtml(j.result);
-      if (j.htmlUrl && fresh){ q('.pc-reval').src = j.htmlUrl + '?v=' + Date.now(); q('.pc-revalwrap').classList.remove('hidden'); }
+      // 初回の計算成功時は（手入力で項目が揃ったケースでも）分析結果を自動表示。
+      // 以降は編集ごとに再読込しない（入力中のiframeリセット防止）。手入力の反映は「🔄分析を更新」ボタンで。
+      const showFresh = fresh || q('.pc-revalwrap').classList.contains('hidden');
+      if (j.htmlUrl && showFresh){ q('.pc-reval').src = j.htmlUrl + '?v=' + Date.now(); q('.pc-revalwrap').classList.remove('hidden'); }
       renderRanking();
     } catch(e){ q('.pc-calcerr').textContent='通信エラー: '+e.message; q('.pc-calcerr').classList.remove('hidden'); }
   }
