@@ -168,6 +168,7 @@ function buildCard(){
     '<div class="pc-body">'+
       '<div class="pc-status note"></div>'+
       '<div class="pc-warn"></div>'+
+      '<div class="pc-seismic"></div>'+
       '<div class="pc-fields hidden">'+fieldsHtml+'</div>'+
       '<div class="pc-calcerr err hidden"></div>'+
       '<pre class="carte pc-carte hidden"></pre>'+
@@ -205,6 +206,9 @@ function buildCard(){
       if (!j.ok){ q('.pc-calcerr').textContent='⚠️ '+(j.error||'計算失敗'); q('.pc-calcerr').classList.remove('hidden'); return; }
       lastResult = j.result; lastHtmlUrl = j.htmlUrl;
       q('.pc-carte').textContent = j.carte || ''; q('.pc-carte').classList.remove('hidden');
+      const sm = j.result && j.result.seismic;
+      if (sm && sm.note) { const red = sm.level==='old'; q('.pc-seismic').innerHTML = '<div class="warnbox"'+(red?' style="background:#fef2f2;border-color:#fecaca;color:#991b1b;"':'')+'>'+sm.note+'</div>'; }
+      else { q('.pc-seismic').innerHTML = ''; }
       q('.pc-title').textContent = fl.name || '物件';
       q('.pc-badge').innerHTML = badgeHtml(j.result);
       // 初回の計算成功時は（手入力で項目が揃ったケースでも）分析結果を自動表示。

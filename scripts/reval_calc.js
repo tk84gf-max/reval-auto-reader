@@ -137,6 +137,18 @@ const gRepay = repayR <= 50 ? 'A' : repayR <= 60 ? 'B' : repayR <= 65 ? 'C' : 'D
 const gCFR = cfR >= 2 ? 'A' : cfR >= 1.5 ? 'B' : cfR >= 1.0 ? 'C' : 'D';
 const gIkka = ikRatio >= 100 ? 'A' : ikRatio >= 80 ? 'B' : ikRatio >= 60 ? 'C' : 'D';
 
+// ===== 耐震基準（築年から推定）=====
+// 新耐震＝1981年(昭和56年)6月1日以降の「建築確認」。判定は竣工年でなく確認日なので、
+// 竣工1982〜1983年は確認日次第で旧耐震が混じるグレーゾーン。木造は2000年6月の接合部基準も注意。
+const consYear = age > 0 ? new Date().getFullYear() - age : 0;
+let seismic = { year: consYear, level: 'unknown', note: '' };
+if (consYear > 0) {
+  if (consYear <= 1981) seismic = { year: consYear, level: 'old', note: `⚠️ 旧耐震の可能性大（推定竣工${consYear}年）：新耐震は1981年6月以降の建築確認。竣工1981年以前は旧耐震の可能性が高い。耐震診断・補強の要否、融資・地震保険・出口（売りにくさ）への影響を要確認` };
+  else if (consYear <= 1983) seismic = { year: consYear, level: 'gray', note: `⚠️ 新旧耐震の境目（推定竣工${consYear}年）：竣工は新しめでも建築確認が1981年5月以前なら旧耐震。建築確認日（確認申請の時期）を必ず確認` };
+  else if (struct === 'wood' && consYear <= 2000) seismic = { year: consYear, level: 'wood2000', note: `△ 木造2000年基準より前（推定竣工${consYear}年）：新耐震だが2000年6月の木造接合部・耐力壁基準より前。耐震性にばらつきの可能性` };
+  else seismic = { year: consYear, level: 'new', note: '' };
+}
+
 // ===== 出力 =====
 const f = v => (isFinite(v) ? Math.round(v).toLocaleString('ja-JP') : '―');
 const p2 = v => (isFinite(v) ? v.toFixed(2) : '―');
@@ -146,6 +158,7 @@ L0.push(`  物件評価カルテ：${name}`);
 L0.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 L0.push(`  ${address}`);
 L0.push(`  価格 ${f(price)}万 / 表面${p2(gy)}% / 築${age}年 / ${({wood:'木造',steel_light:'軽量鉄骨(3mm以下)',steel_med:'軽量鉄骨(3〜4mm)',steel:'重量鉄骨',rc:'RC',src:'SRC'})[struct] || struct} / 延床${area}㎡ / ${rooms}戸`);
+if (seismic.note) L0.push(`  ${seismic.note}`);
 L0.push('');
 L0.push('【 投資指標（初年） 】');
 L0.push(`  年間CF        ${f(CF)} 円/年`);
@@ -203,6 +216,7 @@ const out = {
   CF, CCR, repayR, cfR, gCCR, gRepay, gCFR,
   ikLand, ikBuild, ikTotal, ikRatio, gIkka, routeEstimated, resid,
   buildVal, landVal, life, dep, preTax, taxAmt, profitAfter, afterCF,
+  seismic,
 };
 console.log('===JSON===');
 console.log(JSON.stringify(out));
