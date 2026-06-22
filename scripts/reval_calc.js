@@ -131,7 +131,7 @@ const preTax = NOI - int1 - dep;
 const taxAmt = Math.max(preTax, 0) * taxRate / 100;
 const profitAfter = preTax - taxAmt;
 const afterCF = CF - taxAmt;
-// ===== グレード・キャプテン基準 =====
+// ===== グレード・スコア =====
 const gCCR = CCR >= 20 ? 'A' : CCR >= 15 ? 'B' : CCR >= 10 ? 'C' : 'D';
 const gRepay = repayR <= 50 ? 'A' : repayR <= 60 ? 'B' : repayR <= 65 ? 'C' : 'D';
 const gCFR = cfR >= 2 ? 'A' : cfR >= 1.5 ? 'B' : cfR >= 1.0 ? 'C' : 'D';
@@ -186,7 +186,7 @@ L0.push(`  償却年数 ${life}年 → 減価償却 ${f(dep)} 円/年`);
 L0.push(`  税引前利益 ${f(preTax)} / 納税 ${f(taxAmt)}（税率${taxRate}%）`);
 L0.push(`  税引き後CF      ${f(afterCF)} 円/年`);
 L0.push('');
-L0.push(`【 キャプテン基準（${capPass}/5 合格） 】`);
+L0.push(`【 スコア（${capPass}/5 合格） 】`);
 L0.push(`  価格 ${cap.price.rule}：${ck(cap.price.pass)}（${cap.price.val}）`);
 L0.push(`  表面利回り ${cap.yield.rule}：${ck(cap.yield.pass)}（${cap.yield.val}）`);
 L0.push(`  CF率 ${cap.cfr.rule}：${ck(cap.cfr.pass)}（${cap.cfr.val}）`);
