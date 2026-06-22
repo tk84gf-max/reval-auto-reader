@@ -131,24 +131,15 @@ const preTax = NOI - int1 - dep;
 const taxAmt = Math.max(preTax, 0) * taxRate / 100;
 const profitAfter = preTax - taxAmt;
 const afterCF = CF - taxAmt;
-// ===== グレード・スコア =====
+// ===== グレード =====
 const gCCR = CCR >= 20 ? 'A' : CCR >= 15 ? 'B' : CCR >= 10 ? 'C' : 'D';
 const gRepay = repayR <= 50 ? 'A' : repayR <= 60 ? 'B' : repayR <= 65 ? 'C' : 'D';
 const gCFR = cfR >= 2 ? 'A' : cfR >= 1.5 ? 'B' : cfR >= 1.0 ? 'C' : 'D';
 const gIkka = ikRatio >= 100 ? 'A' : ikRatio >= 80 ? 'B' : ikRatio >= 60 ? 'C' : 'D';
-const cap = {
-  price: { pass: price <= 10000, val: price + '万円', rule: '≤1億円' },
-  yield: { pass: gy >= 7.1, val: gy.toFixed(2) + '%', rule: '≥7.1%' },
-  cfr: { pass: cfR >= 1.0, val: cfR.toFixed(2) + '%', rule: '≥1.0%' },
-  ccr: { pass: CCR >= 15.0, val: CCR.toFixed(1) + '%', rule: '≥15%' },
-  ikka: { pass: ikRatio >= 60.0, val: ikRatio.toFixed(1) + '%', rule: '≥60%' },
-};
-const capPass = Object.values(cap).filter(c => c.pass).length;
 
 // ===== 出力 =====
 const f = v => (isFinite(v) ? Math.round(v).toLocaleString('ja-JP') : '―');
 const p2 = v => (isFinite(v) ? v.toFixed(2) : '―');
-const ck = b => (b ? '✅合格' : '❌未達');
 const L0 = [];
 L0.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 L0.push(`  物件評価カルテ：${name}`);
@@ -186,12 +177,6 @@ L0.push(`  償却年数 ${life}年 → 減価償却 ${f(dep)} 円/年`);
 L0.push(`  税引前利益 ${f(preTax)} / 納税 ${f(taxAmt)}（税率${taxRate}%）`);
 L0.push(`  税引き後CF      ${f(afterCF)} 円/年`);
 L0.push('');
-L0.push(`【 スコア（${capPass}/5 合格） 】`);
-L0.push(`  価格 ${cap.price.rule}：${ck(cap.price.pass)}（${cap.price.val}）`);
-L0.push(`  表面利回り ${cap.yield.rule}：${ck(cap.yield.pass)}（${cap.yield.val}）`);
-L0.push(`  CF率 ${cap.cfr.rule}：${ck(cap.cfr.pass)}（${cap.cfr.val}）`);
-L0.push(`  CCR ${cap.ccr.rule}：${ck(cap.ccr.pass)}（${cap.ccr.val}）`);
-L0.push(`  積算比率 ${cap.ikka.rule}：${ck(cap.ikka.pass)}（${cap.ikka.val}）`);
 L0.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log(L0.join('\n'));
 
@@ -218,7 +203,6 @@ const out = {
   CF, CCR, repayR, cfR, gCCR, gRepay, gCFR,
   ikLand, ikBuild, ikTotal, ikRatio, gIkka, routeEstimated, resid,
   buildVal, landVal, life, dep, preTax, taxAmt, profitAfter, afterCF,
-  captain: cap, captainPass: capPass,
 };
 console.log('===JSON===');
 console.log(JSON.stringify(out));

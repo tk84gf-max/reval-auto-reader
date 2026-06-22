@@ -251,7 +251,7 @@ function fetchUrlText(url, maxChars = 12000, redirects = 4) {
 // 通知基準（ヒロさん指定・2026-06-19）：ReValの分析結果のみで判定する。
 //   3軸の格付け（CCR / 返済比率 / CF率）を A=4 B=3 C=2 D=1 で得点化し、
 //   合計（3〜12点）が PASS_LINE 点以上なら通過＝通知。
-//   ※価格≤1億・表面≥7.1%・積算≥60% の旧キャプテン基準は廃止（使わない）。
+//   ※以前の5点足切り基準（価格≤1億・表面≥7.1%・積算≥60% 等）は廃止（使わない）。
 //   ※格付けの閾値は reval_calc.js の gCCR / gRepay / gCFR の定義に従う。
 const GRADE_SCORE = { A: 4, B: 3, C: 2, D: 1 };
 const PASS_LINE = 6;
