@@ -165,6 +165,44 @@ if (isMixed) {
   commercial = { level: 'commercial', note: '⚠️ 商業・テナント系（店舗/事務所/ビル）の可能性：本ツールは住居系前提の計算です。空室の長期化・原状回復(スケルトン)が高額・融資が付きにくく期間が短い・出口が狭い・賃料は消費税課税&テナント業績依存、など住居系と異なるリスクがあり、表示数値は目安として確認を' };
 }
 
+// ===== シナリオ別の3軸評価（CCR / 返済比率 / CF率＋グレード）=====
+// ① 想定＝マイソク表面利回り＋標準費率（actualを使わない楽観前提）
+// ② 満室実数・③ 現況実数＝レントロール/実費(actual)を反映した実態前提
+const gC = c => c >= 20 ? 'A' : c >= 15 ? 'B' : c >= 10 ? 'C' : 'D';
+const gR = c => c <= 50 ? 'A' : c <= 60 ? 'B' : c <= 65 ? 'C' : 'D';
+const gF = c => c >= 2 ? 'A' : c >= 1.5 ? 'B' : c >= 1.0 ? 'C' : 'D';
+const triple = (ccr, rep, cfr) => ({ CCR: ccr, repayR: rep, cfR: cfr, gCCR: gC(ccr), gRepay: gR(rep), gCFR: gF(cfr) });
+// ① マイソク純想定（actualを一切使わない：grossYield＋標準費率）
+const q_fullRent = priceY * gy / 100;
+const q_effRent = q_fullRent * (1 - vac / 100);
+const q_exp = q_effRent * mgmtRate / 100 + bmUnit * tsubo * 12 + utilUnit * tsubo * 12 + buildCost * insurRate / 100 + q_effRent * taxProp / 100 + buildCost * repairRate / 100 + rentTsubo * (1 - vac / 100) * restoreUnit * turnover / 100 + (q_effRent / 12) * adMonths * (turnover / 100) + otherCost;
+const q_NOI = q_effRent + parkInc + otherInc - q_exp;
+const q_CF = q_NOI - annualRepay;
+const q_CCR = equity > 0 ? q_CF / equity * 100 : 0;
+const q_repayR = q_effRent > 0 ? annualRepay / q_effRent * 100 : 0;
+const q_cfR = priceY > 0 ? q_CF / priceY * 100 : 0;
+// ③ 現況実数（レントロール現況賃料・実費）
+const hasCur = (A.currentRentAnnual !== undefined && A.currentRentAnnual !== '' && A.currentRentAnnual !== null && Number(A.currentRentAnnual) > 0);
+const curRent = hasCur ? Number(A.currentRentAnnual) : 0;
+const curNOI = curRent - exp, curCF = curNOI - annualRepay;
+const curCCR = equity > 0 ? curCF / equity * 100 : 0;
+const curRepay = curRent > 0 ? annualRepay / curRent * 100 : 0;
+const curCFR = priceY > 0 ? curCF / priceY * 100 : 0;
+const curY = priceY > 0 ? curRent / priceY * 100 : 0;
+const hasActual = !!(A.fullRentAnnual || hasCur || A.mgmt || A.bm || A.util || A.insur || A.tax || A.repair || A.restore || A.ad || A.other);
+// 3系統の3軸評価（②満室実数＝トップレベルCF/CCR…はactual反映後の満室。actual無しなら①想定と一致）
+const eval3 = {
+  hasActual, hasCur,
+  quote: triple(q_CCR, q_repayR, q_cfR),
+  fullActual: hasActual ? triple(CCR, repayR, cfR) : null,
+  cur: hasCur ? triple(curCCR, curRepay, curCFR) : null
+};
+const detail = {
+  hasActual, hasCur,
+  full: { CF, CCR, repayR, cfR, NOI, gy: gyEff },
+  cur: hasCur ? { CF: curCF, CCR: curCCR, repayR: curRepay, cfR: curCFR, NOI: curNOI, gy: curY } : null
+};
+
 // ===== 出力 =====
 const f = v => (isFinite(v) ? Math.round(v).toLocaleString('ja-JP') : '―');
 const p2 = v => (isFinite(v) ? v.toFixed(2) : '―');
@@ -207,27 +245,20 @@ L0.push(`  償却年数 ${life}年 → 減価償却 ${f(dep)} 円/年`);
 L0.push(`  税引前利益 ${f(preTax)} / 納税 ${f(taxAmt)}（税率${taxRate}%）`);
 L0.push(`  税引き後CF      ${f(afterCF)} 円/年`);
 L0.push('');
+if (eval3.hasActual) {
+  const t3 = t => `CCR ${p2(t.CCR)}%[${t.gCCR}] / 返済比率 ${p2(t.repayR)}%[${t.gRepay}] / CF率 ${p2(t.cfR)}%[${t.gCFR}]`;
+  L0.push('【 3軸評価：① 想定（マイソク） vs 実態（レントロール） 】');
+  L0.push(`  ① 想定（表面利回り） ${t3(eval3.quote)}`);
+  if (eval3.fullActual) L0.push(`  ② 満室（実数・実費） ${t3(eval3.fullActual)}`);
+  if (eval3.cur)        L0.push(`  ③ 現況（実数・実費） ${t3(eval3.cur)}`);
+  L0.push('');
+}
 L0.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log(L0.join('\n'));
 
-// ===== 現況（実数）・満室 vs 現況の詳細比較 =====
-const hasCur = (A.currentRentAnnual !== undefined && A.currentRentAnnual !== '' && A.currentRentAnnual !== null && Number(A.currentRentAnnual) > 0);
-const curRent = hasCur ? Number(A.currentRentAnnual) : 0;
-const curNOI = curRent - exp, curCF = curNOI - annualRepay;
-const curCCR = equity > 0 ? curCF / equity * 100 : 0;
-const curRepay = curRent > 0 ? annualRepay / curRent * 100 : 0;
-const curCFR = priceY > 0 ? curCF / priceY * 100 : 0;
-const curY = priceY > 0 ? curRent / priceY * 100 : 0;
-const hasActual = !!(A.fullRentAnnual || hasCur || A.mgmt || A.bm || A.util || A.insur || A.tax || A.repair || A.restore || A.ad || A.other);
-const detail = {
-  hasActual, hasCur,
-  full: { CF, CCR, repayR, cfR, NOI, gy: gyEff },
-  cur: hasCur ? { CF: curCF, CCR: curCCR, repayR: curRepay, cfR: curCFR, NOI: curNOI, gy: curY } : null
-};
-
 const out = {
   name, address, price, gy, gyEff, age, struct, area, landArea, rooms,
-  detail,
+  detail, eval3,
   fullRent, effRent, NOI, exp, realYield,
   loanY, equity, monthly, annualRepay, totalRepay, int1,
   CF, CCR, repayR, cfR, gCCR, gRepay, gCFR,

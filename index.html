@@ -173,6 +173,7 @@ function buildCard(){
       '<div class="pc-fields hidden">'+fieldsHtml+'</div>'+
       '<div class="pc-calcerr err hidden"></div>'+
       '<pre class="carte pc-carte hidden"></pre>'+
+      '<div class="pc-eval3 hidden"></div>'+
       '<div class="pc-detailwrap hidden">'+
         '<div style="font-weight:600;font-size:13px;margin-bottom:6px;">📎 詳細資料を追加（レントロール・ランニングコストなど）</div>'+
         '<div class="pc-detaildrop">ここにドロップ／クリックで選択（複数可）→ 満室実数・現況実数も算出</div>'+
@@ -213,6 +214,18 @@ function buildCard(){
       const cm = j.result && j.result.commercial;
       if (cm && cm.note) { q('.pc-commercial').innerHTML = '<div class="warnbox">'+cm.note+'</div>'; }
       else { q('.pc-commercial').innerHTML = ''; }
+      const ev = j.result && j.result.eval3;
+      if (ev && ev.hasActual) {
+        const row = (lb,t)=>'<tr><td style="padding:3px 6px;">'+lb+'</td><td class="r" style="padding:3px 6px;">'+pct(t.CCR)+'% <b>'+t.gCCR+'</b></td><td class="r" style="padding:3px 6px;">'+pct(t.repayR)+'% <b>'+t.gRepay+'</b></td><td class="r" style="padding:3px 6px;">'+pct(t.cfR)+'% <b>'+t.gCFR+'</b></td></tr>';
+        let h='<div style="border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-top:4px;background:#f8fafc;">';
+        h+='<div style="font-weight:600;font-size:13px;margin-bottom:6px;">📊 3軸評価：想定（マイソク） vs 実態（レントロール）</div>';
+        h+='<table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr style="color:#6b7280;"><th style="text-align:left;padding:3px 6px;">前提</th><th class="r" style="padding:3px 6px;">CCR</th><th class="r" style="padding:3px 6px;">返済比率</th><th class="r" style="padding:3px 6px;">CF率</th></tr></thead><tbody>';
+        h+=row('① 想定(マイソク)', ev.quote);
+        if(ev.fullActual) h+=row('② 満室(実数)', ev.fullActual);
+        if(ev.cur) h+=row('③ 現況(実数)', ev.cur);
+        h+='</tbody></table></div>';
+        q('.pc-eval3').innerHTML=h; q('.pc-eval3').classList.remove('hidden');
+      } else { q('.pc-eval3').innerHTML=''; q('.pc-eval3').classList.add('hidden'); }
       q('.pc-title').textContent = fl.name || '物件';
       q('.pc-badge').innerHTML = badgeHtml(j.result);
       // 初回の計算成功時は（手入力で項目が揃ったケースでも）分析結果を自動表示。
