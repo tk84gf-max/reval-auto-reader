@@ -133,7 +133,7 @@ const profitAfter = preTax - taxAmt;
 const afterCF = CF - taxAmt;
 // ===== グレード =====
 const gCCR = CCR >= 20 ? 'A' : CCR >= 15 ? 'B' : CCR >= 10 ? 'C' : 'D';
-const gRepay = repayR <= 50 ? 'A' : repayR <= 60 ? 'B' : repayR <= 65 ? 'C' : 'D';
+const gRepay = effRent > 0 ? (repayR <= 50 ? 'A' : repayR <= 60 ? 'B' : repayR <= 65 ? 'C' : 'D') : 'D'; // 収入0(=利回り/年収不明)のとき返済比率0%がA誤判定→Dに矯正
 const gCFR = cfR >= 2 ? 'A' : cfR >= 1.5 ? 'B' : cfR >= 1.0 ? 'C' : 'D';
 const gIkka = ikRatio >= 100 ? 'A' : ikRatio >= 80 ? 'B' : ikRatio >= 60 ? 'C' : 'D';
 
@@ -171,7 +171,7 @@ if (isMixed) {
 const gC = c => c >= 20 ? 'A' : c >= 15 ? 'B' : c >= 10 ? 'C' : 'D';
 const gR = c => c <= 50 ? 'A' : c <= 60 ? 'B' : c <= 65 ? 'C' : 'D';
 const gF = c => c >= 2 ? 'A' : c >= 1.5 ? 'B' : c >= 1.0 ? 'C' : 'D';
-const triple = (ccr, rep, cfr) => ({ CCR: ccr, repayR: rep, cfR: cfr, gCCR: gC(ccr), gRepay: gR(rep), gCFR: gF(cfr) });
+const triple = (ccr, rep, cfr, hasInc) => ({ CCR: ccr, repayR: rep, cfR: cfr, gCCR: gC(ccr), gRepay: hasInc === false ? 'D' : gR(rep), gCFR: gF(cfr) }); // 収入0なら返済比率はD（0%=A誤判定の防止）
 // ① マイソク純想定（actualを一切使わない：grossYield＋標準費率）
 const q_fullRent = priceY * gy / 100;
 const q_effRent = q_fullRent * (1 - vac / 100);
@@ -193,9 +193,9 @@ const hasActual = !!(A.fullRentAnnual || hasCur || A.mgmt || A.bm || A.util || A
 // 3系統の3軸評価（②満室実数＝トップレベルCF/CCR…はactual反映後の満室。actual無しなら①想定と一致）
 const eval3 = {
   hasActual, hasCur,
-  quote: triple(q_CCR, q_repayR, q_cfR),
-  fullActual: hasActual ? triple(CCR, repayR, cfR) : null,
-  cur: hasCur ? triple(curCCR, curRepay, curCFR) : null
+  quote: triple(q_CCR, q_repayR, q_cfR, q_effRent > 0),
+  fullActual: hasActual ? triple(CCR, repayR, cfR, effRent > 0) : null,
+  cur: hasCur ? triple(curCCR, curRepay, curCFR, curRent > 0) : null
 };
 const detail = {
   hasActual, hasCur,
