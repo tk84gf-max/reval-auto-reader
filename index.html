@@ -170,6 +170,7 @@ function buildCard(){
       '<div class="pc-warn"></div>'+
       '<div class="pc-seismic"></div>'+
       '<div class="pc-commercial"></div>'+
+      '<div class="pc-leasehold"></div>'+
       '<div class="pc-fields hidden">'+fieldsHtml+'</div>'+
       '<div class="pc-calcerr err hidden"></div>'+
       '<pre class="carte pc-carte hidden"></pre>'+
@@ -214,6 +215,9 @@ function buildCard(){
       const cm = j.result && j.result.commercial;
       if (cm && cm.note) { q('.pc-commercial').innerHTML = '<div class="warnbox">'+cm.note+'</div>'; }
       else { q('.pc-commercial').innerHTML = ''; }
+      const lh = j.result && j.result.leasehold;
+      if (lh && lh.note) { q('.pc-leasehold').innerHTML = '<div class="warnbox">'+lh.note+'</div>'; }
+      else { q('.pc-leasehold').innerHTML = ''; }
       const ev = j.result && j.result.eval3;
       if (ev && ev.hasActual) {
         const row = (lb,t)=>'<tr><td style="padding:3px 6px;">'+lb+'</td><td class="r" style="padding:3px 6px;">'+pct(t.CCR)+'% <b>'+t.gCCR+'</b></td><td class="r" style="padding:3px 6px;">'+pct(t.repayR)+'% <b>'+t.gRepay+'</b></td><td class="r" style="padding:3px 6px;">'+pct(t.cfR)+'% <b>'+t.gCFR+'</b></td></tr>';

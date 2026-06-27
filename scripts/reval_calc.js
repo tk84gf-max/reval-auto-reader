@@ -165,6 +165,12 @@ if (isMixed) {
   commercial = { level: 'commercial', note: '⚠️ 商業・テナント系（店舗/事務所/ビル）の可能性：本ツールは住居系前提の計算です。空室の長期化・原状回復(スケルトン)が高額・融資が付きにくく期間が短い・出口が狭い・賃料は消費税課税&テナント業績依存、など住居系と異なるリスクがあり、表示数値は目安として確認を' };
 }
 
+// ===== 土地権利（借地権）の注意 =====
+// 情報がなければ所有権でデフォルト計算。借地権と確認できた場合のみ補完してアラート（ヒロさん方針 2026-06-26）。
+const tenure = String(P.tenure || '');
+let leasehold = { isLeasehold: /借地|地上権/.test(tenure), note: '' };
+if (leasehold.isLeasehold) leasehold.note = '⚠️ 借地権の可能性：土地は所有でなく借地のため、融資が付きにくい・地代/更新料/建替承諾料の負担・契約期間や更新の不確実性・積算（土地分）が出ない・売却しにくい、など所有権と大きく異なります。本ツールは所有権前提の計算なので、表示数値は目安として確認を';
+
 // ===== シナリオ別の3軸評価（CCR / 返済比率 / CF率＋グレード）=====
 // ① 想定＝マイソク表面利回り＋標準費率（actualを使わない楽観前提）
 // ② 満室実数・③ 現況実数＝レントロール/実費(actual)を反映した実態前提
@@ -214,6 +220,7 @@ L0.push(`  ${address}`);
 L0.push(`  価格 ${f(price)}万 / 表面${p2(gy)}% / 築${age}年 / ${({wood:'木造',steel_light:'軽量鉄骨(3mm以下)',steel_med:'軽量鉄骨(3〜4mm)',steel:'重量鉄骨',rc:'RC',src:'SRC'})[struct] || struct} / 延床${area}㎡ / ${rooms}戸`);
 if (seismic.note) L0.push(`  ${seismic.note}`);
 if (commercial.note) L0.push(`  ${commercial.note}`);
+if (leasehold.note) L0.push(`  ${leasehold.note}`);
 L0.push('');
 L0.push('【 投資指標（初年） 】');
 L0.push(`  年間CF        ${f(CF)} 円/年`);
@@ -264,7 +271,7 @@ const out = {
   CF, CCR, repayR, cfR, gCCR, gRepay, gCFR,
   ikLand, ikBuild, ikTotal, ikRatio, gIkka, routeEstimated, resid,
   buildVal, landVal, life, dep, preTax, taxAmt, profitAfter, afterCF,
-  seismic, commercial,
+  seismic, commercial, leasehold,
 };
 console.log('===JSON===');
 console.log(JSON.stringify(out));
