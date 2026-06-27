@@ -216,7 +216,7 @@ function buildCard(){
       if (cm && cm.note) { q('.pc-commercial').innerHTML = '<div class="warnbox">'+cm.note+'</div>'; }
       else { q('.pc-commercial').innerHTML = ''; }
       const lh = j.result && j.result.leasehold;
-      if (lh && lh.note) { q('.pc-leasehold').innerHTML = '<div class="warnbox">'+lh.note+'</div>'; }
+      if (lh && lh.note) { const red = lh.type==='teiki'; q('.pc-leasehold').innerHTML = '<div class="warnbox"'+(red?' style="background:#fef2f2;border-color:#fecaca;color:#991b1b;"':'')+'>'+lh.note+'</div>'; }
       else { q('.pc-leasehold').innerHTML = ''; }
       const ev = j.result && j.result.eval3;
       if (ev && ev.hasActual) {
