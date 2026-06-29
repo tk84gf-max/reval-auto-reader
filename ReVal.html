@@ -173,7 +173,12 @@
   <div class="section">
     <h2>5軸メトリクス（目標ライン付き）</h2>
     <div id="metrics"></div>
-    <div class="tax-note">縦線は目標ライン（表面利回り≥7.1% / NOI利回り≥4.0% / CF率≥1.0% / 返済比率≤50% / 積算比率≥60%）。緑＝達成・赤＝未達。</div>
+    <div class="tax-note" id="metricsNote"></div>
+    <details style="margin-top:8px;">
+      <summary style="cursor:pointer;font-size:13px;color:#2563eb;">⚙ 目標値を編集（このブラウザに保存／メール監視の足切り判定には影響しません）</summary>
+      <div id="targetEdit" style="margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;"></div>
+      <div style="margin-top:8px;"><button type="button" id="targetReset" style="font-size:12px;padding:4px 10px;">デフォルトに戻す</button></div>
+    </details>
   </div>
 
   <!-- ===== 物件情報 入力 ===== -->
@@ -417,6 +422,12 @@
 <script>
 const TSUBO = 3.305785; // 1坪 = 3.305785㎡
 const $ = id => document.getElementById(id);
+// 5軸メトリクスの目標値（このブラウザに保存・編集可）。※メール監視の足切り(CCR/返済/CF率の3軸合計点)とは無関係の"表示用ライン"。
+const DEFAULT_TARGETS = { gy: 9.0, noi: 6.5, cfr: 1.5, repay: 50, ikr: 90 };
+const TKEY = 'reval_targets_v1';
+function loadTargets(){ try{ return Object.assign({}, DEFAULT_TARGETS, JSON.parse(localStorage.getItem(TKEY) || '{}')); }catch(e){ return Object.assign({}, DEFAULT_TARGETS); } }
+function saveTargets(t){ try{ localStorage.setItem(TKEY, JSON.stringify(t)); }catch(e){} }
+let TARGETS = loadTargets();
 const num = id => parseFloat($(id).value) || 0;
 // 実数オーバーライド: 入力欄が空なら標準値(def)、値が入っていればその実額（0も有効）を返す
 const ovNum = (id, def) => { const el=$(id); if(!el) return def; const v=el.value.trim(); return v===''? def : (parseFloat(v)||0); };
@@ -663,12 +674,13 @@ function calc(){
 
   // ---- メトリクスバー ----
   drawMetrics([
-    {label:'表面利回り', val:gyEff,      max:15,  target:7.1, dir:'high', unit:'%'},
-    {label:'NOI利回り',  val:realYield,  max:10,  target:4.0, dir:'high', unit:'%'},
-    {label:'CF率',       val:cfRatio,    max:4,   target:1.0, dir:'high', unit:'%'},
-    {label:'返済比率',   val:repayRatio, max:100, target:50,  dir:'low',  unit:'%'},
-    {label:'積算比率',   val:ikRatio,    max:120, target:60,  dir:'high', unit:'%'},
+    {label:'表面利回り', val:gyEff,      max:15,  target:TARGETS.gy,    dir:'high', unit:'%'},
+    {label:'NOI利回り',  val:realYield,  max:10,  target:TARGETS.noi,   dir:'high', unit:'%'},
+    {label:'CF率',       val:cfRatio,    max:4,   target:TARGETS.cfr,   dir:'high', unit:'%'},
+    {label:'返済比率',   val:repayRatio, max:100, target:TARGETS.repay, dir:'low',  unit:'%'},
+    {label:'積算比率',   val:ikRatio,    max:120, target:TARGETS.ikr,   dir:'high', unit:'%'},
   ]);
+  $('metricsNote').textContent = '縦線は目標ライン（表面利回り≥' + TARGETS.gy + '% / NOI利回り≥' + TARGETS.noi + '% / CF率≥' + TARGETS.cfr + '% / 返済比率≤' + TARGETS.repay + '% / 積算比率≥' + TARGETS.ikr + '%）。緑＝達成・赤＝未達。';
 
   // ---- 35年シミュレーション ----
   const YEARS=35;
@@ -845,6 +857,14 @@ $('grossYield').addEventListener('input', ()=>syncRent('gy'));
 
 // ---- 初期化 ----
 document.addEventListener('input', e=>{ if(e.target.matches('input,select')) calc(); });
+// ---- 目標値エディタ（このブラウザに保存。足切りには無関係の表示用ライン）----
+function buildTargetEditor(){
+  const fs = [['gy','表面利回り ≥'],['noi','NOI利回り ≥'],['cfr','CF率 ≥'],['repay','返済比率 ≤'],['ikr','積算比率 ≥']];
+  $('targetEdit').innerHTML = fs.map(f => '<label style="font-size:12px;color:#374151;">' + f[1] + '<br><input type="number" step="any" data-tk="' + f[0] + '" value="' + TARGETS[f[0]] + '" style="width:100%;padding:5px;box-sizing:border-box;"> %</label>').join('');
+}
+$('targetEdit').addEventListener('input', e=>{ const k=e.target.dataset.tk; if(!k) return; const v=parseFloat(e.target.value); if(!isNaN(v)){ TARGETS[k]=v; saveTargets(TARGETS); } });
+$('targetReset').addEventListener('click', ()=>{ TARGETS=Object.assign({},DEFAULT_TARGETS); saveTargets(TARGETS); buildTargetEditor(); calc(); });
+buildTargetEditor();
 load();
 calc();
 </script>
