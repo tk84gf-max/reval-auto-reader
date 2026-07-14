@@ -57,7 +57,8 @@ const termAuto = autoLoanTerm(ll, age);
 const termGiven = (L.loanTerm !== undefined && L.loanTerm !== '' && L.loanTerm !== null && String(L.loanTerm).toLowerCase() !== 'auto');
 const term = termGiven ? Number(L.loanTerm) : termAuto;
 // --- revenue ---
-const eff = g(R, 'effRate', 80), vac = g(R, 'vacancyRate', 5), decline = g(R, 'declineRate', 1);
+// 有効率の構造別デフォルト（IG準拠 2026-06-26）：木造=共用部が少なく100%／それ以外=80%。※鉄骨系は後日データで調整。明示指定があればそれを優先。
+const eff = g(R, 'effRate', struct === 'wood' ? 100 : 80), vac = g(R, 'vacancyRate', 5), decline = g(R, 'declineRate', 1);
 const parkingUnit = g(R, 'parkingUnit', 0), parkingCount = g(R, 'parkingCount', 0), parkingVac = g(R, 'parkingVacancy', 5), otherInc = g(R, 'otherIncome', 0);
 // --- expense ---
 const mgmtRate = g(E, 'mgmtRate', 5.5), bmUnit = g(E, 'bmUnit', 200), utilUnit = g(E, 'utilUnit', 50), buildUnit = g(E, 'buildUnit', 760000);

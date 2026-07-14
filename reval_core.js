@@ -170,7 +170,7 @@ function buildInput(f, actual) {
   const input = {
     property: { name: f.name || '物件', price: f.price, grossYield: gy, buildAge: f.buildAge, struct: f.struct || 'rc', floorArea: f.floorArea, landArea: f.landArea, rooms: f.rooms, address: f.address || '', use: f.useType || '', tenure: f.tenure || '所有権' },
     loan: { ltv: 90, costsRate: 7, loanTerm: 'auto', intRate: 2.0, repayType: 'genri' },
-    revenue: { effRate: 80, vacancyRate: 5, declineRate: 1 },
+    revenue: { effRate: (String(f.struct || 'rc').toLowerCase() === 'wood' ? 100 : 80), vacancyRate: 5, declineRate: 1 }, // 有効率は構造別（IG準拠：木造100/他80）。鉄骨系は後日調整
     expense: { mgmtRate: 5.5 },
     sekisan: { routePrice: f.routePrice || 0, deteriGrade: 'other' },
     tax: { taxRate: 20, buildRatio: 70 }

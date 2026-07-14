@@ -857,6 +857,8 @@ $('grossYield').addEventListener('input', ()=>syncRent('gy'));
 
 // ---- 初期化 ----
 document.addEventListener('input', e=>{ if(e.target.matches('input,select')) calc(); });
+// 構造を変えたら有効率のデフォルトを自動更新（IG準拠：木造100%／他80%。鉄骨系は後日調整）。手入力で上書き可。
+$('buildStruct').addEventListener('change', () => { $('effRate').value = ($('buildStruct').value === 'wood' ? 100 : 80); calc(); });
 // ---- 目標値エディタ（このブラウザに保存。足切りには無関係の表示用ライン）----
 function buildTargetEditor(){
   const fs = [['gy','表面利回り ≥'],['noi','NOI利回り ≥'],['cfr','CF率 ≥'],['repay','返済比率 ≤'],['ikr','積算比率 ≥']];
